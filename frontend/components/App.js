@@ -155,8 +155,19 @@ export default function App() {
           <Route path="/" element={<LoginForm login={login}/>} />
           <Route path="articles" element={
             <>
-              <ArticleForm />
-              <Articles />
+              <ArticleForm 
+                currentArticle={articles.find(art => art.article_id == currentArticleId)}
+                setCurrentArticleId={setCurrentArticleId}
+                postArticle={postArticle}
+                updateArticle={updateArticle}
+               />
+              <Articles 
+                articles={articles}
+                currentArticleId={currentArticleId}
+                setCurrentArticleId={setCurrentArticleId}
+                getArticles={getArticles}
+                deleteArticle={deleteArticle}
+              />
             </>
           } />
         </Routes>

@@ -23,31 +23,31 @@ export default function App() {
   const redirectToArticles = () => navigate('/articles')
 
   const logout = () => {
-    if (localStorage.getItem('token')){
-        localStorage.removeItem('token')
-        setMessage('Goodbye!')
-  }
-  redirectToLogin()
-}
+    if (localStorage.getItem("token")) {
+      localStorage.removeItem("token");
+      setMessage("Goodbye!");
+    }
+    redirectToLogin();
+  };
 
   const login = ({ username, password }) => {
     setSpinnerOn(true)
     setMessage('')
     axios.post(loginUrl, { username, password })
       .then(res => {
-        localStorage.setItem('token, res.token')
+        localStorage.setItem('token', res.data.token) // Corrected here
         setMessage(res.data.message)
         redirectToArticles();
       })
       .catch(err => {
         const responseMessage = err?.response?.data?.message
         setMessage(responseMessage || `Somethin' horrible logging in: ${err.message}`)
-
       })
       .finally(() => {
         setSpinnerOn(false)
       })
   }
+  
 
   const getArticles = () => {
     // ✨ implement
@@ -83,10 +83,18 @@ export default function App() {
     // to inspect the response from the server.
     setSpinnerOn(true)
     setMessage('')
-    let token = localStorage.getItem('token')
-    axios.post(articlesUrl, article, { headers: {Authorization: token} })
+    axios.post(articlesUrl, article, { headers: { Authorization: localStorage.getItem('token')}})
       .then(res => {
-        console.log(res)
+        setMessage(res.data.message)
+        setArticles(articles => {
+          return articles.concat(res.data.article)
+        })
+      })
+      .catch(err => {
+        setMessage(err?.response?.data?.message || 'Something bad happened')
+      })
+      .finally(() => {
+        setSpinnerOn(false)
       })
   }
 
@@ -137,7 +145,7 @@ export default function App() {
           setSpinnerOn(false)
         })
   }
-  }
+
 
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗

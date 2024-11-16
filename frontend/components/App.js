@@ -71,7 +71,9 @@ export default function App() {
           redirectToLogin()
         }
       })
-      setSpinnerOn(false)
+      .finally(() => {
+        setSpinnerOn(false)
+      })  
   }
 
   const postArticle = article => {
@@ -79,22 +81,69 @@ export default function App() {
     // The flow is very similar to the `getArticles` function.
     // You'll know what to do! Use log statements or breakpoints
     // to inspect the response from the server.
+    setSpinnerOn(true)
+    setMessage('')
+    let token = localStorage.getItem('token')
+    axios.post(articlesUrl, article, { headers: {Authorization: token} })
+      .then(res => {
+        console.log(res)
+      })
   }
 
   const updateArticle = ({ article_id, article }) => {
-    // ✨ implement
-    // You got this!
+    setMessage('')
+    setSpinnerOn(true)
+    axios.put(`${articlesUrl}/${article_id}`, article, {headers: {Authorization: 
+      localStorage.getItem('token')}})
+        .then(res => {
+          setMessage(res.data.message)
+          setArticles(articles => {
+            return articles.map(art => {
+              return art.article_id === article_id ? res.data.article: art
+            })
+          })
+        })
+        .catch(err => {
+          setMessage(err?.response?.data?.message || "Something bad happened")
+          if(err.response.status == 401) {
+            redirectToLogin()
+          }
+        })
+        .finally(() => {
+          setSpinnerOn(false)
+        })
   }
 
   const deleteArticle = article_id => {
-    // ✨ implement
+    setMessage('')
+    setSpinnerOn(true)
+    axios.delete(`${articlesUrl}/${article_id}`, {headers: {Authorization: 
+      localStorage.getItem('token')}})
+        .then(res => {
+          setMessage(res.data.message)
+          setArticles(articles => {
+            return articles.filter(art => {
+              return art.article_id != article_id
+            })
+          })
+        })
+        .catch(err => {
+          setMessage(err?.response?.data?.message || "Something bad happened")
+          if(err.response.status == 401) {
+            redirectToLogin()
+          }
+        })
+        .finally(() => {
+          setSpinnerOn(false)
+        })
+  }
   }
 
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
-      <Spinner />
-      <Message />
+      <Spinner on={spinnerOn}/>
+      <Message message={message}/>
       <button id="logout" onClick={logout}>Logout from app</button>
       <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}> {/* <-- do not change this line */}
         <h1>Advanced Web Applications</h1>
@@ -103,7 +152,7 @@ export default function App() {
           <NavLink id="articlesScreen" to="/articles">Articles</NavLink>
         </nav>
         <Routes>
-          <Route path="/" element={<LoginForm />} />
+          <Route path="/" element={<LoginForm login={login}/>} />
           <Route path="articles" element={
             <>
               <ArticleForm />
